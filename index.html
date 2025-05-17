@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Grabador de Audio con Tailwind</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-6">
+
+  <h1 class="text-3xl font-bold text-blue-600 mb-4">Grabador de Audio</h1>
+
+  <div class="flex gap-4 mb-4">
+    <button id="startBtn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
+      Iniciar Grabación
+    </button>
+    <button id="stopBtn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded" disabled>
+      Detener Grabación
+    </button>
+  </div>
+
+  <p id="status" class="mb-4 text-gray-700">Estado: <span class="font-semibold">Parado</span></p>
+
+  <audio id="audioPlayer" controls class="w-full max-w-md"></audio>
+
+  <script>
+    let mediaRecorder;
+    let audioChunks = [];
+
+    const startBtn = document.getElementById("startBtn");
+    const stopBtn = document.getElementById("stopBtn");
+    const status = document.getElementById("status");
+    const audioPlayer = document.getElementById("audioPlayer");
+
+    startBtn.onclick = async () => {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(stream);
+
+      mediaRecorder.ondataavailable = e => {
+        audioChunks.push(e.data);
+      };
+
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(audioChunks, { type: "audio/wav" });
+        const audioUrl = URL.createObjectURL(blob);
+        audioPlayer.src = audioUrl;
+        audioChunks = [];
+      };
+
+      mediaRecorder.start();
+      status.innerHTML = "Estado: <span class='font-semibold text-green-600'>Grabando...</span>";
+      startBtn.disabled = true;
+      stopBtn.disabled = false;
+    };
+
+    stopBtn.onclick = () => {
+      mediaRecorder.stop();
+      status.innerHTML = "Estado: <span class='font-semibold text-red-600'>Parado</span>";
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
+    };
+  </script>
+</body>
+</html>
